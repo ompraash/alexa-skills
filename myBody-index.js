@@ -1,16 +1,5 @@
-/**
- Copyright 2014-2015 Amazon.com, Inc. or its affiliates. All Rights Reserved.
- Licensed under the Apache License, Version 2.0 (the "License"). You may not use this file except in compliance with the License. A copy of the License is located at
- http://aws.amazon.com/apache2.0/
- or in the "license" file accompanying this file. This file is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
- */
-
 'use strict';
 
-/**
- * When editing your questions pay attention to your punctuation. Make sure you use question marks or periods.
- * Make sure the first answer is the correct one. Set at least 4 answers, any extras will be shuffled in.
- */
 var questions = [
   {
       "Heart has how many pumps?": [
@@ -205,7 +194,7 @@ exports.handler = function (event, context) {
          * prevent someone else from configuring a skill that sends requests to this function.
          */
 
-    if (event.session.application.applicationId !== " put ur appid") {
+    if (event.session.application.applicationId !== "amzn1.ask.skill.57785c2c-c47f-4700-9f82-6f7ce7863e82") {
         context.fail("Invalid Application ID");
      }
 
@@ -273,6 +262,7 @@ function onIntent(intentRequest, session, callback) {
             handleRepeatRequest(intent, session, callback);
         }
     }
+    console.log("intentname is " + intentName);
 
     // dispatch custom intents to handlers here
     if ("AnswerIntent" === intentName) {
@@ -430,7 +420,7 @@ function handleAnswerRequest(intent, session, callback) {
         // If the user provided answer isn't a number > 0 and < ANSWER_COUNT,
         // return an error message to the user. Remember to guide the user into providing correct values.
         var reprompt = session.attributes.speechOutput;
-        var speechOutput = "Try guessing the part of body, you will get it " + reprompt;
+        var speechOutput = "Give a try. " + reprompt;
         callback(session.attributes,
             buildSpeechletResponse(CARD_TITLE, speechOutput, reprompt, false));
     } else {
@@ -460,16 +450,21 @@ function handleAnswerRequest(intent, session, callback) {
                 buildSpeechletResponse(CARD_TITLE, speechOutput, "", true));
         } else {
             currentQuestionIndex += 1;
-            var spokenQuestion = Object.keys(questions[gameQuestions[currentQuestionIndex]]);
+            var spokenQuestion = Object.keys(questions[gameQuestions[currentQuestionIndex]])[0];
             // Generate a random index for the correct answer, from 0 to 3
             correctAnswerIndex = Math.floor(Math.random() * (ANSWER_COUNT));
             var roundAnswers = populateRoundAnswers(gameQuestions, currentQuestionIndex, correctAnswerIndex),
 
                 questionIndexForSpeech = currentQuestionIndex + 1,
-                repromptText =  spokenQuestion ;
-            for (var i = 0; i < ANSWER_COUNT; i++) {
-                repromptText +=  ""
-            }
+                repromptText = " " + questionIndexForSpeech.toString() + ". " + spokenQuestion + " ";
+                  for (var i = 0; i < ANSWER_COUNT; i++) {
+                    repromptText += (i+1).toString() + ". " + roundAnswers[i] + ". "
+                  }
+
+            //     repromptText =  spokenQuestion ;
+            // for (var i = 0; i < ANSWER_COUNT; i++) {
+            //     repromptText +=  ""
+            // }
             speechOutput += userGaveUp ? "" : "That answer is ";
             speechOutput += speechOutputAnalysis + "Your score is " + currentScore.toString() + ". " + repromptText;
 
@@ -527,9 +522,16 @@ function handleFinishSessionRequest(intent, session, callback) {
 }
 
 function isAnswerSlotValid(intent) {
+    var slotmissing = 'Answer' in intent.slots && 1 || 0;
+    if (slotmissing == 1) {
     var answerSlotFilled = intent.slots && intent.slots.Answer && intent.slots.Answer.value;
     var answerSlotIsInt = answerSlotFilled && !isNaN(parseInt(intent.slots.Answer.value));
-    return 1;
+    return 1; }
+    else {
+      return 0;
+    }
+
+    answerSlotIsInt && parseInt(intent.slots.Answer.value) < (ANSWER_COUNT + 1) && parseInt(intent.slots.Answer.value) > 0;
 }
 
 // ------- Helper functions to build responses -------
